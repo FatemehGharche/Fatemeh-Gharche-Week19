@@ -1,0 +1,25 @@
+.item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 10px;
+  }
+
+  .item:hover {
+    background-color: #f0f0f0; 
+  }
+  
+  .info {
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .actions button,
+  .actions input[type="checkbox"] {
+    margin-left: 8px;
+    cursor: pointer;
+  }
