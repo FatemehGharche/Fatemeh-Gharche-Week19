@@ -1,146 +1,110 @@
-import { useState, useEffect } from 'react';
-import { useContacts } from '../context/ContactContext';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import { v4 as uuidv4 } from 'uuid';
 import Modal from './Modal';
-import styles from "./ContactForm.module.css";
+import styles from './ContactForm.module.css';
+import InputField from './InputField'; 
 
-const ContactForm = ({ onClose }) => {
-  const { state, dispatch } = useContacts();
-  const editing = Boolean(state.selectedContact);
 
-  const [form, setForm] = useState({
-    name: '',
-    lastname: '',
-    email: '',
-    job: '',
-    phone: '',
+const schema = yup.object({
+  name: yup.string().required('Name is required.'),
+  lastname: yup.string().required('Last name is required.'),
+  email: yup.string().email('Invalid email.').required('Email is required.'),
+  job: yup.string(),
+  phone: yup.string().required('Phone number is required.'),
+});
+const ContactForm = ({
+  initialValues = { name: '', lastname: '', email: '', job: '', phone: '' },
+  labels = {
+    name: 'First Name',
+    lastname: 'Last Name',
+    email: 'Email',
+    job: 'Job Title',
+    phone: 'Phone Number',
+    submit: 'Submit',
+    success: 'Contact submitted successfully!',
+    confirmAdd: 'Are you sure you want to add this contact?',
+    confirmEdit: 'Are you sure you want to save the changes?',
+  },
+  onSubmitData,
+  onSuccess,
+  onClose,
+  editing = false,
+}) => {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isDirty },
+  } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: initialValues,  
   });
 
-  const [originalForm, setOriginalForm] = useState(form);
-  const [errors, setErrors] = useState({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const values = watch();
 
   useEffect(() => {
-    if (editing) {
-      setForm(state.selectedContact);
-      setOriginalForm(state.selectedContact);
-    }
-  }, [editing, state.selectedContact]);
+    reset(initialValues);  
+  }, [initialValues, reset]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const validate = () => {
-    const newErrors = {};
-    if (!form.name.trim()) newErrors.name = 'Name is required.';
-    if (!form.lastname.trim()) newErrors.lastname = 'Last name is required.';
-    if (!/\S+@\S+\.\S+/.test(form.email)) newErrors.email = 'Invalid email.';
-    if (!form.phone.trim()) newErrors.phone = 'Phone is required.';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const hasChanges = () => {
-    return Object.keys(form).some(key => form[key] !== (originalForm[key] || ''));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!validate()) return;
+  const handleFormSubmit = () => {
     setShowConfirmModal(true);
   };
 
   const confirmSubmit = () => {
-    if (editing) {
-      dispatch({
-        type: 'EDIT_CONTACT',
-        payload: { id: form.id, updated: form },
-      });
-      dispatch({ type: 'SET_SELECTED_CONTACT', payload: null });
-    } else {
-      dispatch({
-        type: 'ADD_CONTACT',
-        payload: { ...form, id: Date.now() },
-      });
-    }
+    const finalData = {
+      ...values,
+      id: editing && values.id ? values.id : uuidv4(),
+    };
 
-    setForm({ name: '', lastname: '', email: '', job: '', phone: '' });
-    setOriginalForm({ name: '', lastname: '', email: '', job: '', phone: '' });
+    if (onSubmitData) onSubmitData(finalData);
+
+    reset(initialValues);
     setShowConfirmModal(false);
     setShowSuccessMessage(true);
-    setTimeout(() => setShowSuccessMessage(false), 3000);
+    if (onSuccess) onSuccess();
     if (onClose) onClose();
+
+    setTimeout(() => setShowSuccessMessage(false), 3000);
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
-      <input
-        name="name"
-        value={form.name}
-        onChange={handleChange}
-        placeholder="Name"
-        className={styles.field}
-      />
-      {errors.name && <span className={styles.error}>{errors.name}</span>}
-
-      <input
-        name="lastname"
-        value={form.lastname}
-        onChange={handleChange}
-        placeholder="Last Name"
-        className={styles.field}
-      />
-      {errors.lastname && <span className={styles.error}>{errors.lastname}</span>}
-
-      <input
-        name="email"
-        value={form.email}
-        onChange={handleChange}
-        placeholder="Email"
-        className={styles.field}
-      />
-      {errors.email && <span className={styles.error}>{errors.email}</span>}
-
-      <input
-        name="job"
-        value={form.job}
-        onChange={handleChange}
-        placeholder="Job"
-        className={styles.field}
-      />
-
-      <input
-        name="phone"
-        value={form.phone}
-        onChange={handleChange}
-        placeholder="Phone"
-        className={styles.field}
-      />
-      {errors.phone && <span className={styles.error}>{errors.phone}</span>}
+    <form onSubmit={handleSubmit(handleFormSubmit)} className={styles.form}>
+      <InputField label="First Name" name="name" register={register} error={errors.name} />
+      <InputField label="Last Name" name="lastname" register={register} error={errors.lastname} />
+      <InputField label="Email" name="email" type="email" register={register} error={errors.email} />
+      <InputField label="Job Title" name="job" register={register} error={errors.job} />
+      <InputField label="Phone Number" name="phone" type="tel" register={register} error={errors.phone} />
 
       <button
         type="submit"
         className={styles.action}
-        disabled={!hasChanges()}
-        style={{ opacity: hasChanges() ? 1 : 0.5, cursor: hasChanges() ? 'pointer' : 'not-allowed' }}
+        disabled={!isDirty}
+        style={{ opacity: isDirty ? 1 : 0.5, cursor: isDirty ? 'pointer' : 'not-allowed' }}
       >
-        {editing ? 'Edit' : 'Add'}
+        {labels.submit}
       </button>
 
       {showConfirmModal && (
         <Modal
-          message={editing ? "Confirm edit?" : "Confirm add new contact?"}
+          title="Confirmation"
+          message={editing ? labels.confirmEdit : labels.confirmAdd}
           onConfirm={confirmSubmit}
           onCancel={() => setShowConfirmModal(false)}
         />
       )}
 
       {showSuccessMessage && (
-        <div className={styles.success}>Successfully {editing ? 'edited' : 'added'} contact!</div>
+        <div className={styles.success}>{labels.success}</div>
       )}
     </form>
   );
 };
+
 
 export default ContactForm;

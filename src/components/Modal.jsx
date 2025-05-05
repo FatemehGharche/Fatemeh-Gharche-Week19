@@ -1,11 +1,26 @@
 import styles from './Modal.module.css';
 
-const Modal = ({ message, onConfirm, onCancel }) => (
+const Modal = ({
+  title = "Confirm Action",
+  message,
+  children,
+  onConfirm,
+  onCancel,
+  confirmText = "Yes",
+  cancelText = "No"
+}) => (
   <div className={styles.overlay}>
     <div className={styles.modal}>
-      <p>{message}</p>
-      <button onClick={onConfirm} className={styles.confirm}>Yes</button>
-      <button onClick={onCancel} className={styles.cancel}>No</button>
+      {title && <h3 className={styles.title}>{title}</h3>}
+
+      {message && <p className={styles.message}>{message}</p>}
+
+      {children}
+
+      <div className={styles.actions}>
+        <button onClick={onConfirm} className={styles.confirm}>{confirmText}</button>
+        <button onClick={onCancel} className={styles.cancel}>{cancelText}</button>
+      </div>
     </div>
   </div>
 );

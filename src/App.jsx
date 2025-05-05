@@ -14,7 +14,7 @@ const AppContent = () => {
 
   useEffect(() => {
     if (state.selectedContact) {
-      setShowForm(true);
+      setShowForm(true);  
     }
   }, [state.selectedContact]);
 
@@ -27,9 +27,22 @@ const AppContent = () => {
     dispatch({ type: 'TOGGLE_MULTI_SELECT' });
   };
 
-  return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto'}}>
+  const handleFormClose = () => {
+    setShowForm(false);
+    dispatch({ type: 'SET_SELECTED_CONTACT', payload: null }); 
+  };
 
+  const handleSubmitData = (contact) => {
+    if (state.selectedContact) {
+      dispatch({ type: 'EDIT_CONTACT', payload: { id: contact.id, updated: contact } });
+    } else {
+      dispatch({ type: 'ADD_CONTACT', payload: contact });
+    }
+  };
+  
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <SearchBar
         query={query}
         setQuery={setQuery}
@@ -38,7 +51,16 @@ const AppContent = () => {
         multiSelectMode={state.multiSelectMode}
       />
 
-      {showForm && <ContactForm onClose={() => setShowForm(false)} />}
+      {showForm && (
+        <ContactForm
+        initialValues={state.selectedContact || {}}
+        editing={!!state.selectedContact}
+        onSubmitData={handleSubmitData}
+        onClose={handleFormClose}
+      />
+      
+      )}
+
       <ContactList query={query} />
 
       {state.selectedIds.length > 0 && (
@@ -62,6 +84,7 @@ const AppContent = () => {
     </div>
   );
 };
+
 
 const App = () => (
   <ContactProvider>
