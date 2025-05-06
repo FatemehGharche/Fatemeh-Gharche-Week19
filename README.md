@@ -20,7 +20,6 @@ A simple and elegant contact management application built with React.
 * Yup
 * UUID (for unique contact IDs)
 * CSS Modules
-* (Optional) JSON Server / LocalStorage for persistence
 
 ## 📦 Installation
 
@@ -40,6 +39,8 @@ src/
 │   ├── ContactItem.module.css
 │   ├── ContactList.jsx
 │   ├── ContactList.module.css
+|   ├── InputField.jsx
+│   ├── InputField.module.css
 │   ├── Modal.jsx
 │   ├── Modal.module.css
 │   ├── SearchBar.jsx

@@ -15,6 +15,7 @@ const schema = yup.object({
   job: yup.string(),
   phone: yup.string().required('Phone number is required.'),
 });
+
 const ContactForm = ({
   initialValues = { name: '', lastname: '', email: '', job: '', phone: '' },
   labels = {
